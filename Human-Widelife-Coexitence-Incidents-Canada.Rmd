@@ -1,0 +1,65 @@
+---
+title: "Human-Widelife-Coexistence-Incidents-Canada"
+author: "Yongpeng Fu"
+date: "10/02/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(survey) #Used for statistical analysis
+library(sampling) #Used for sample data
+library(ggplot2) #Used for plot
+library(tibble) #used for nice display dataframe
+library(magrittr) #Used for %>% 
+library(tidyverse) #Used to manipualte dataframe
+library(dplyr) # Used for easy manipualte rows and columns
+library(plyr) #Used for mapping vector values
+library(stringr) #Used to manipulate string
+library(gridExtra) #Used to arrange the ggplot chart
+```
+
+# Human-wildlife coexistence incidents managed by Parks Canada
+
+Find all dataset in [here](https://open.canada.ca/data/en/dataset/743a0b4a-9e33-4b12-981a-9f9fd3dd1680).
+
+This Open Data Record is comprised of datasets that document human-wildlife coexistence incidents and response actions by Parks Canada Agency. A human-wildlife coexistence (HWC) “incident” is any potential conflict situation between people and wildlife that was assigned to Parks Canada staff to manage to help ensure the safety and wellbeing of people and wildlife. The vast majority of HWC incidents are minor and staff are able to manage them safely with low risk to people, however, the dataset also includes more hazardous incidents between people and wildlife that can result in injury or death of either wildlife or people.
+
+HWC incident data inform Parks Canada Agency policies, programs, and operations, and enable evaluation of HWC patterns to help Parks Canada ensure safe and enjoyable visitor experiences while conserving wildlife and integrity of ecosystems across our national system of protected heritage areas.
+
+For any single HWC incident, there may be multiple management actions taken or multiple animals involved, and therefore this Open Data Record includes separate datasets for **incidents**, **responses**, **animals involved**, and **human activities**. These four datasets include many shared fields, including a unique alphanumeric “Incident Number” that can be used to look-up records between the tables or to join the tables in a relational database. There are also thirteen derived datasets provided to summarize the total number of incidents, animal species involved, animals killed (by human causes), aggressive encounters, unnatural attractants, and response actions taken. Please note: these datasets include some incidents that Parks Canada staff were involved outside of park boundaries on surrounding lands or waters.
+
+All HWC incident data remain subject to ongoing revisions as more information comes available or for quality control purposes. All protected, personal, private or confidential information has been removed from these datasets.
+
+
+```{r Load Data}
+#Load the data
+incidents = read.csv("../Human-wildlife coexistence incidents managed by Parks Canada Dataset/pca-human-wildlife-coexistence-incidents-detailed-records.csv")
+responses = read.csv("../Human-wildlife coexistence incidents managed by Parks Canada Dataset/pca-human-wildlife-coexistence-responses-detailed-records.csv")
+animals_involved = read.csv("../Human-wildlife coexistence incidents managed by Parks Canada Dataset/pca-human-wildlife-coexistence-animals-involved-detailed-records.csv")
+activities = read.csv("../Human-wildlife coexistence incidents managed by Parks Canada Dataset/pca-human-wildlife-coexistence-activities-detailed-records.csv")
+```
+## Q12: Is Incident Type independent from Activity Type or not?
+```{r summary}
+summary(incidents)
+summary(responses)
+summary(animals_involved)
+summary(activities)
+```
+
+```{r merge data}
+#Merge to dataframe based on "Incident.Number"
+Incident_Activity <- merge(incidents[,c("Incident.Number","Incident.Type")], activities[, c("Incident.Number","Activity.Type")], by = "Incident.Number")
+Incident_Activity <- na.omit(Incident_Activity)
+```
+
+```{r chi}
+#Using chi square test for independence
+chisq.test(table(Incident_Activity$Incident.Type, Incident_Activity$Activity.Type))
+library(questionr) #test for Pearson's residual
+chisq.residuals(table(Incident_Activity$Incident.Type, Incident_Activity$Activity.Type), std=TRUE)
+```
+
+
+
+
